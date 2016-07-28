@@ -41,8 +41,8 @@ class XBaseRecord {
     var $inserted;
     var $recordIndex;
     
-    function XBaseRecord($table, $recordIndex, $rawData=false) {
-        $this->table =& $table;
+    function __construct($table, $recordIndex, $rawData=false) {
+        $this->table = $table;
         $this->recordIndex=$recordIndex;
         $this->choppedData = array();
         if ($rawData && strlen($rawData)>0) {
