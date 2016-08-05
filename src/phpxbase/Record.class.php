@@ -1,8 +1,8 @@
 <?php
 /**
 * ----------------------------------------------------------------
-*			XBase
-*			Record.class.php	
+*           XBase
+*           Record.class.php    
 * 
 *  Developer        : Erwin Kooi
 *  released at      : Nov 2005
@@ -20,16 +20,16 @@
 *
 **/
 
-define ("DBFFIELD_TYPE_MEMO","M");		// Memo type field.
-define ("DBFFIELD_TYPE_CHAR","C");		// Character field.
-define ("DBFFIELD_TYPE_NUMERIC","N");	// Numeric
-define ("DBFFIELD_TYPE_FLOATING","F");	// Floating point
-define ("DBFFIELD_TYPE_DATE","D");		// Date
-define ("DBFFIELD_TYPE_LOGICAL","L");	// Logical - ? Y y N n T t F f (? when not initialized).
-define ("DBFFIELD_TYPE_DATETIME","T");	// DateTime
+define ("DBFFIELD_TYPE_MEMO","M");      // Memo type field.
+define ("DBFFIELD_TYPE_CHAR","C");      // Character field.
+define ("DBFFIELD_TYPE_NUMERIC","N");   // Numeric
+define ("DBFFIELD_TYPE_FLOATING","F");  // Floating point
+define ("DBFFIELD_TYPE_DATE","D");      // Date
+define ("DBFFIELD_TYPE_LOGICAL","L");   // Logical - ? Y y N n T t F f (? when not initialized).
+define ("DBFFIELD_TYPE_DATETIME","T");  // DateTime
 
 define ("DBFFIELD_TYPE_INDEX","I");    // Index 
-define ("DBFFIELD_IGNORE_0","0");		// ignore this field
+define ("DBFFIELD_IGNORE_0","0");       // ignore this field
 
 
 class XBaseRecord {
@@ -41,23 +41,23 @@ class XBaseRecord {
     var $inserted;
     var $recordIndex;
     
-    function XBaseRecord($table, $recordIndex, $rawData=false) {
-        $this->table =& $table;
+    function __construct($table, $recordIndex, $rawData=false) {
+        $this->table = $table;
         $this->recordIndex=$recordIndex;
         $this->choppedData = array();
         if ($rawData && strlen($rawData)>0) {
-	        $this->inserted=false;
-        	$this->deleted=(ord($rawData[0])!="32");
-        	foreach ($table->getColumns() as $column) {
-            	$this->choppedData[]=substr($rawData,$column->getBytePos(),$column->getDataLength());
-        	}
-    	} else {
-	    	$this->inserted=true;
-	    	$this->deleted=false;
-	    	foreach ($table->getColumns() as $column) {
-		    	$this->choppedData[]=str_pad("", $column->getDataLength(),chr(0));
-	    	}
-    	}
+            $this->inserted=false;
+            $this->deleted=(ord($rawData[0])!="32");
+            foreach ($table->getColumns() as $column) {
+                $this->choppedData[]=substr($rawData,$column->getBytePos(),$column->getDataLength());
+            }
+        } else {
+            $this->inserted=true;
+            $this->deleted=false;
+            foreach ($table->getColumns() as $column) {
+                $this->choppedData[]=str_pad("", $column->getDataLength(),chr(0));
+            }
+        }
     }
     function isDeleted() {
         return $this->deleted;
@@ -124,7 +124,7 @@ class XBaseRecord {
         trigger_error ("cannot handle datatype".$columnObj->getType(), E_USER_ERROR);
     }
     function getDate($columnObj) {
-	    if ($columnObj->getType()!=DBFFIELD_TYPE_DATE) trigger_error ($columnObj->getName()." is not a Date column", E_USER_ERROR);
+        if ($columnObj->getType()!=DBFFIELD_TYPE_DATE) trigger_error ($columnObj->getName()." is not a Date column", E_USER_ERROR);
         $s = $this->forceGetString($columnObj);
         if (!$s) return false;
         return strtotime($s);
@@ -157,45 +157,52 @@ class XBaseRecord {
         }
     }
     function getMemo($columnObj) {
-	    if ($columnObj->getType()!=DBFFIELD_TYPE_MEMO) trigger_error ($columnObj->getName()." is not a Memo column", E_USER_ERROR);
+        if ($columnObj->getType()!=DBFFIELD_TYPE_MEMO) trigger_error ($columnObj->getName()." is not a Memo column", E_USER_ERROR);
         return $this->forceGetString($columnObj);
     }
     function getFloat($columnObj) {
-	    if ($columnObj->getType()!=DBFFIELD_TYPE_FLOATING) trigger_error ($columnObj->getName()." is not a Float column", E_USER_ERROR);
+        if ($columnObj->getType()!=DBFFIELD_TYPE_FLOATING) trigger_error ($columnObj->getName()." is not a Float column", E_USER_ERROR);
         $s = $this->forceGetString($columnObj);
         if (!$s) return false;
         $s = str_replace(",",".",$s);
         return floatval($s);
     }
-    function getInt($columnObj) {
-	    if ($columnObj->getType()!=DBFFIELD_TYPE_NUMERIC) trigger_error ($columnObj->getName()." is not a Number column", E_USER_ERROR);
+    function getInt($columnObj) {        
+        if ($columnObj->getType()!=DBFFIELD_TYPE_NUMERIC) trigger_error ($columnObj->getName()." is not a Number column", E_USER_ERROR);
         $s = $this->forceGetString($columnObj);
         if (!$s) return false;
         $s = str_replace(",",".",$s);
+
+        // Make sure we get numeric numbers back
+        if($columnObj->decimalCount > 0){
+            if(is_numeric($s)){
+                return $s;
+            }
+        }
         return intval($s);
     }
-	function getIndex($columnObj) {
-		if ($columnObj->getType()!=DBFFIELD_TYPE_INDEX) trigger_error ($columnObj->getName()." is not an Index column", E_USER_ERROR);
-		$s = $this->choppedData[$columnObj->getColIndex()];
-		if (!$s) return false;
-		
-		$ret = ord($s[0]);
-		for ($i = 1; $i < $columnObj->length; $i++) {
-			$ret += $i * 256 * ord($s[$i]);
-		}
-		return $ret;   
-	} 
+    function getIndex($columnObj) {
+        if ($columnObj->getType()!=DBFFIELD_TYPE_INDEX) trigger_error ($columnObj->getName()." is not an Index column", E_USER_ERROR);
+        $s = $this->choppedData[$columnObj->getColIndex()];
+        if (!$s) return false;
+        
+        $ret = ord($s[0]);
+        for ($i = 1; $i < $columnObj->length; $i++) {
+            $ret += $i * 256 * ord($s[$i]);
+        }
+        return $ret;   
+    } 
 
     /**
      * -------------------------------------------------------------------------
- 	 * Set data functions
+     * Set data functions
      * -------------------------------------------------------------------------
      **/
-	function copyFrom($record) {
-		$this->choppedData = $record->choppedData;
-	}
+    function copyFrom($record) {
+        $this->choppedData = $record->choppedData;
+    }
     function setDeleted($b) {
-       	$this->deleted=$b;
+        $this->deleted=$b;
     }
     function setStringByName($columnName,$value) {
         $this->setString($this->table->getColumnByName($columnName),$value);
@@ -207,7 +214,7 @@ class XBaseRecord {
         if ($columnObj->getType()==DBFFIELD_TYPE_CHAR) {
             $this->forceSetString($columnObj,$value);
         } else {
-	        if ($columnObj->getType()==DBFFIELD_TYPE_DATETIME || $columnObj->getType()==DBFFIELD_TYPE_DATE) $value = strtotime($value);
+            if ($columnObj->getType()==DBFFIELD_TYPE_DATETIME || $columnObj->getType()==DBFFIELD_TYPE_DATE) $value = strtotime($value);
             $this->setObject($columnObj,$value);
         }
     }
@@ -234,18 +241,18 @@ class XBaseRecord {
         trigger_error ("cannot handle datatype".$columnObj->getType(), E_USER_ERROR);
     }
     function setDate($columnObj,$value) {
-	    if ($columnObj->getType()!=DBFFIELD_TYPE_DATE) trigger_error ($columnObj->getName()." is not a Date column", E_USER_ERROR);
+        if ($columnObj->getType()!=DBFFIELD_TYPE_DATE) trigger_error ($columnObj->getName()." is not a Date column", E_USER_ERROR);
         if (strlen($value)==0) {
-	        $this->forceSetString($columnObj,"");
-	        return;
+            $this->forceSetString($columnObj,"");
+            return;
         }
-       	$this->forceSetString($columnObj,date("Ymd",$value));
+        $this->forceSetString($columnObj,date("Ymd",$value));
     }
     function setDateTime($columnObj,$value) {
         if ($columnObj->getType()!=DBFFIELD_TYPE_DATETIME) trigger_error ($columnObj->getName()." is not a DateTime column", E_USER_ERROR);
         if (strlen($value)==0) {
-	        $this->forceSetString($columnObj,"");
-	        return;
+            $this->forceSetString($columnObj,"");
+            return;
         }
         $a = getdate($value);
         $d = $this->zerodate + (mktime(0,0,0,$a["mon"],$a["mday"],$a["year"]) / 86400);
@@ -274,23 +281,23 @@ class XBaseRecord {
         }
     }
     function setMemo($columnObj,$value) {
-	    if ($columnObj->getType()!=DBFFIELD_TYPE_MEMO) trigger_error ($columnObj->getName()." is not a Memo column", E_USER_ERROR);
+        if ($columnObj->getType()!=DBFFIELD_TYPE_MEMO) trigger_error ($columnObj->getName()." is not a Memo column", E_USER_ERROR);
         return $this->forceSetString($columnObj,$value);
     }
     function setFloat($columnObj,$value) {
-	    if ($columnObj->getType()!=DBFFIELD_TYPE_FLOATING) trigger_error ($columnObj->getName()." is not a Float column", E_USER_ERROR);
+        if ($columnObj->getType()!=DBFFIELD_TYPE_FLOATING) trigger_error ($columnObj->getName()." is not a Float column", E_USER_ERROR);
         if (strlen($value)==0) {
-	        $this->forceSetString($columnObj,"");
-	        return;
+            $this->forceSetString($columnObj,"");
+            return;
         }
         $value = str_replace(",",".",$value);
         $s = $this->forceSetString($columnObj,$value);
     }
     function setInt($columnObj,$value) {
-	    if ($columnObj->getType()!=DBFFIELD_TYPE_NUMERIC) trigger_error ($columnObj->getName()." is not a Number column", E_USER_ERROR);
+        if ($columnObj->getType()!=DBFFIELD_TYPE_NUMERIC) trigger_error ($columnObj->getName()." is not a Number column", E_USER_ERROR);
         if (strlen($value)==0) {
-	        $this->forceSetString($columnObj,"");
-	        return;
+            $this->forceSetString($columnObj,"");
+            return;
         }
         $value = str_replace(",",".",$value);
         //$this->forceSetString($columnObj,intval($value));
@@ -302,11 +309,11 @@ class XBaseRecord {
     }
     /**
      * -------------------------------------------------------------------------
- 	 * Protected
+     * Protected
      * -------------------------------------------------------------------------
      **/
 
      function serializeRawData() {
-	     return ($this->deleted?"*":" ").implode("",$this->choppedData);
+         return ($this->deleted?"*":" ").implode("",$this->choppedData);
      }
 }

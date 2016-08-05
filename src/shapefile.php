@@ -263,7 +263,8 @@ class ShapeFile {
             return $this->IsClockwise($points, $exp * 1000);
         }
         
-        return $tot < 0; 
+        // return $tot < 0; 
+        return true;
     }
     
     
