@@ -95,10 +95,10 @@ function xbase_numrecords($xbase_identifier=false) { // - Find out how many reco
 }
 function xbase_open($filename,$flags=0) { // - Opens a dBase database - flags : Typically 0 means read-only, 1 means write-only, and 2 means read and write
 	if ($flags==0) {
-		$xbase =& new XBaseTable($filename);
+		$xbase = new XBaseTable($filename);
 		if (!$xbase->open()) return false;
 	} else {
-		$xbase =& new XBaseWritableTable($filename);
+		$xbase = new XBaseWritableTable($filename);
 		if (!$xbase->openWrite()) return false;
 	}
 	return xbase_addInstance($xbase);
@@ -108,7 +108,7 @@ function xbase_pack($xbase_identifier=false) { // - Packs a dBase database
 	$xbase->pack();
 }
 function xbase_replace_record($xbase_identifier=false,$record,$record_number) { // - Replace a record in a dBase database
-	if (!($xbase=&xbase_getInstance($xbase_identifier))) return false;
+	if (!($xbase=xbase_getInstance($xbase_identifier))) return false;
 	$r =& $xbase->moveTo($record_number-1);
 	foreach ($record as $i=>$v) {
 		if (is_object($i))
@@ -129,17 +129,17 @@ function &xbase_getInstance($i=NULL) {
 	global $xbase_instances;
 	if (sizeof($xbase_instances)==0) trigger_error ("No xbases available", E_USER_ERROR);
 	if (is_null($i)) {
-		$result =& current($xbase_instances);
+		$result = current($xbase_instances);
 	} else {
 		if (!@$xbase_instances[$i]) trigger_error ($i." is an invalid xbase identifier", E_USER_ERROR);
-		$result =& $xbase_instances[$i];
+		$result = $xbase_instances[$i];
 	}
 	return $result;
 }
 function xbase_addInstance(&$i) {
 	global $xbase_instances;
 	$result = sizeof($xbase_instances);
-	$xbase_instances[$result]=&$i;
+	$xbase_instances[$result]=$i;
 	return $result;
 }
 
